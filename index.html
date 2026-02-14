@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>PCB 測試履歷</title>
+
+<style>
+body{
+    font-family: Arial;
+    background:#f4f6f8;
+    text-align:center;
+}
+h1{
+    background:#2c3e50;
+    color:white;
+    padding:15px;
+}
+table{
+    border-collapse:collapse;
+    margin:auto;
+    background:white;
+}
+th,td{
+    border:1px solid #ccc;
+    padding:10px 15px;
+}
+th{
+    background:#3498db;
+    color:white;
+}
+</style>
+</head>
+
+<body>
+
+<h1>PCB 測試履歷管理系統</h1>
+
+<table id="sheetTable"></table>
+
+<script>
+
+const sheetURL =
+"https://docs.google.com/spreadsheets/d/e/2PACX-1vSSkBRvdAFPXv3Bl6Z8fVaRCxROYurQt9wd5sS0Gt6o6hjMGZ_qtE-ZYaPiv_LmT8ePjN76HMUWVyCJ/pub?output=csv";
+
+fetch(sheetURL)
+.then(res => res.text())
+.then(csv => {
+
+    const rows = csv.split("\n").map(r => r.split(","));
+    let html = "";
+
+    rows.forEach((row, index)=>{
+        html += "<tr>";
+        row.forEach(col=>{
+            html += index==0 ? `<th>${col}</th>` : `<td>${col}</td>`;
+        });
+        html += "</tr>";
+    });
+
+    document.getElementById("sheetTable").innerHTML = html;
+});
+
+</script>
+
+</body>
+</html>
