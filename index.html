@@ -8,12 +8,15 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/handsontable@13.0.0/dist/handsontable.full.min.css">
   <script src="https://cdn.jsdelivr.net/npm/handsontable@13.0.0/dist/handsontable.full.min.js"></script>
 
+  <!-- HyperFormula (公式引擎) -->
+  <script src="https://cdn.jsdelivr.net/npm/hyperformula@2.6.0/dist/hyperformula.full.min.js"></script>
+
   <!-- SheetJS -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
   <style>
     body { font-family: Arial; padding:20px; }
-    #hot { width:100%; height:500px; }
+    #hot { width:100%; height:600px; }
     button { margin-right:10px; }
   </style>
 </head>
@@ -31,40 +34,56 @@
 <script>
 const container = document.getElementById('hot');
 
+// 建立公式引擎
+const hyperformulaInstance = HyperFormula.buildEmpty({
+  licenseKey: 'gpl-v3'
+});
+
 const hot = new Handsontable(container, {
-  data: Handsontable.helper.createSpreadsheetData(20, 10),
+  data: [],
+  minRows: 1000,          // 初始 1000 行
+  minCols: 50,            // 初始 50 欄
+  minSpareRows: 1,        // 永遠保留 1 空白行（自動延伸）
+  minSpareCols: 1,        // 永遠保留 1 空白欄（自動延伸）
   rowHeaders: true,
   colHeaders: true,
-  licenseKey: 'non-commercial-and-evaluation',
+  contextMenu: true,      // 右鍵可插入行列
   dropdownMenu: true,
   filters: true,
   columnSorting: true,
   formulas: {
-    engine: HyperFormula
-  }
+    engine: hyperformulaInstance
+  },
+  licenseKey: 'non-commercial-and-evaluation'
 });
 
 // 匯入 Excel
 document.getElementById('upload').addEventListener('change', function(e) {
-    const reader = new FileReader();
-    reader.onload = function(event) {
-        const data = new Uint8Array(event.target.result);
-        const workbook = XLSX.read(data, {type: 'array'});
-        const sheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[sheetName];
-        const json = XLSX.utils.sheet_to_json(worksheet, {header:1});
-        hot.loadData(json);
-    };
-    reader.readAsArrayBuffer(e.target.files[0]);
+  const reader = new FileReader();
+  reader.onload = function(event) {
+    const data = new Uint8Array(event.target.result);
+    const workbook = XLSX.read(data, {type: 'array'});
+    const sheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[sheetName];
+    const json = XLSX.utils.sheet_to_json(worksheet, {header:1});
+    hot.loadData(json);
+
+    // 保持可延伸
+    hot.updateSettings({
+      minSpareRows: 1,
+      minSpareCols: 1
+    });
+  };
+  reader.readAsArrayBuffer(e.target.files[0]);
 });
 
 // 匯出 Excel
 function exportExcel() {
-    const data = hot.getData();
-    const ws = XLSX.utils.aoa_to_sheet(data);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
-    XLSX.writeFile(wb, "export.xlsx");
+  const data = hot.getData();
+  const ws = XLSX.utils.aoa_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+  XLSX.writeFile(wb, "export.xlsx");
 }
 </script>
 
