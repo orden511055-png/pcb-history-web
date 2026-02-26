@@ -1,65 +1,47 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
-<title>PCB 測試履歷</title>
-
-<style>
-body{
-    font-family: Arial;
-    background:#f4f6f8;
-    text-align:center;
-}
-h1{
-    background:#2c3e50;
-    color:white;
-    padding:15px;
-}
-table{
-    border-collapse:collapse;
-    margin:auto;
-    background:white;
-}
-th,td{
-    border:1px solid #ccc;
-    padding:10px 15px;
-}
-th{
-    background:#3498db;
-    color:white;
-}
-</style>
+  <meta charset="UTF-8">
+  <title>Excel Viewer</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
-
 <body>
 
-<h1>PCB 測試履歷管理系統</h1>
+<h2>上傳 Excel 檔</h2>
+<input type="file" id="upload" accept=".xlsx, .xls" />
+<br><br>
 
-<table id="sheetTable"></table>
+<table border="1" id="excelTable"></table>
 
 <script>
+document.getElementById('upload').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    const reader = new FileReader();
 
-const sheetURL =
-"https://docs.google.com/spreadsheets/d/e/2PACX-1vSSkBRvdAFPXv3Bl6Z8fVaRCxROYurQt9wd5sS0Gt6o6hjMGZ_qtE-ZYaPiv_LmT8ePjN76HMUWVyCJ/pub?output=csv";
+    reader.onload = function(event) {
+        const data = new Uint8Array(event.target.result);
+        const workbook = XLSX.read(data, {type: 'array'});
 
-fetch(sheetURL)
-.then(res => res.text())
-.then(csv => {
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
 
-    const rows = csv.split("\n").map(r => r.split(","));
-    let html = "";
+        const json = XLSX.utils.sheet_to_json(sheet, {header:1});
+        const table = document.getElementById("excelTable");
+        table.innerHTML = "";
 
-    rows.forEach((row, index)=>{
-        html += "<tr>";
-        row.forEach(col=>{
-            html += index==0 ? `<th>${col}</th>` : `<td>${col}</td>`;
+        json.forEach(row => {
+            const tr = document.createElement("tr");
+            row.forEach(cell => {
+                const td = document.createElement("td");
+                td.textContent = cell;
+                tr.appendChild(td);
+            });
+            table.appendChild(tr);
         });
-        html += "</tr>";
-    });
+    };
 
-    document.getElementById("sheetTable").innerHTML = html;
+    reader.readAsArrayBuffer(file);
 });
-
 </script>
 
 </body>
